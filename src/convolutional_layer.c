@@ -41,6 +41,16 @@ matrix backward_convolutional_bias(matrix dy, int n)
     return db;
 }
 
+float get_pixel_from_image(image im, int x, int y, int c)
+{
+
+    if (x >= im.w) return 0;
+    if (y >= im.h) return 0;
+    if (x < 0) return 0;
+    if (y < 0) return 0;
+    return get_pixel(im, x, y, c);
+}
+
 // Make a column matrix out of an image
 // image im: image to process
 // int size: kernel size for convolution operation
@@ -63,7 +73,7 @@ matrix im2col(image im, int size, int stride)
                 int c = k * stride + (i % (size * size)) % size - (size - 1) / 2;
                 int channel = i / (size * size);
                 int idx = (i * outh + j) * outw + k;
-                col.data[idx] = get_pixel(im, c, r, channel);
+                col.data[idx] = get_pixel_from_image(im, c, r, channel);
             }
         }
     }

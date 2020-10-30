@@ -185,10 +185,10 @@ image nn_resize(image im, int w, int h)
 float get_pixel(image im, int x, int y, int c)
 {
 
-    if(x >= im.w) return 0;
-    if(y >= im.h) return 0;
-    if(x < 0) return 0;
-    if(y < 0) return 0;
+    // if(x >= im.w) return 0;
+    // if(y >= im.h) return 0;
+    // if(x < 0) return 0;
+    // if(y < 0) return 0;
     
 
     if(x >= im.w) x = im.w - 1;
