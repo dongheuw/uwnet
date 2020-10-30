@@ -48,18 +48,25 @@ matrix backward_convolutional_bias(matrix dy, int n)
 // returns: column matrix
 matrix im2col(image im, int size, int stride)
 {
-    int i, j, k;
     int outw = (im.w-1)/stride + 1;
     int outh = (im.h-1)/stride + 1;
     int rows = im.c*size*size;
     int cols = outw * outh;
     matrix col = make_matrix(rows, cols);
 
-    // TODO: 5.1
+    // DONE: 5.1
     // Fill in the column matrix with patches from the image
-
-
-
+    for (int i = 0; i < rows; ++i) {
+        for (int j = 0; j < outh; ++j) {
+            for (int k = 0; k < outw; ++k) {
+                int r = j * stride + (i % (size * size)) / size - (size - 1) / 2;
+                int c = k * stride + (i % (size * size)) % size - (size - 1) / 2;
+                int channel = i / (size * size);
+                int idx = (i * outh + j) * outw + k;
+                col.data[idx] = get_pixel(im, c, r, channel);
+            }
+        }
+    }
     return col;
 }
 
@@ -70,17 +77,24 @@ matrix im2col(image im, int size, int stride)
 // image im: image to add elements back into
 image col2im(int width, int height, int channels, matrix col, int size, int stride)
 {
-    int i, j, k;
-
     image im = make_image(width, height, channels);
     int outw = (im.w-1)/stride + 1;
+    int outh = (im.h-1)/stride + 1;
     int rows = im.c*size*size;
 
-    // TODO: 5.2
+    // DONE: 5.2
     // Add values into image im from the column matrix
-    
-
-
+    for (int i = 0; i < rows; ++i) {
+        for (int j = 0; j < outh; ++j) {
+            for (int k = 0; k < outw; ++k) {
+                int r = j * stride + (i % (size * size)) / size - (size - 1) / 2;
+                int c = k * stride + (i % (size * size)) % size - (size - 1) / 2;
+                int channel = i / (size * size);
+                int idx = (i * outh + j) * outw + k;
+                set_pixel(im, c, r, channel, col.data[idx] + get_pixel(im, c, r, channel));
+            }
+        }
+    }
     return im;
 }
 
