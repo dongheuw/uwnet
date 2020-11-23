@@ -702,7 +702,9 @@ Iterate:
 
 Quadratic in number of entries in vector `\(x\)`. Neural networks have millions of weights or more, Hessian would be trillions of entries!
 
-BUT Newton's method is still cool and powerful, so can we approximate it in some way? So called "second-order" methods...
+BUT Newton's method is still cool and powerful, so can we approximate it in some way? Or get some similar benefit?
+
+One of the main benefits of Newton's method is per-weight scaling of learning. Some weights can change quicker than others based on local second-order information. Many "adaptive" methods that scale learning rate based on recent history of gradients per-weight.
  
 ---
 
@@ -716,9 +718,13 @@ w &= w + \eta \Delta w
 
 Why?
 
-Each update is made comparing gradient to past gradients. Less exploding/vanishing gradient problem
-
 `\(s_t\)`: estimate of variance of gradient (uncentered)
+
+Each update is made comparing gradient to past gradients. Less exploding/vanishing gradient problem. If a gradient is high variance we can't trust it much, don't want to move too much based on it. The lower variance it is the more we can trust it.
+
+This scaling effect is similar to second-order methods: "RMSProp provides a biased estimator of the diagonal of the absolute value of the Hessian".
+
+.footnote[https://www.researchgate.net/profile/Y_Bengio/publication/272423025_RMSProp_and_equilibrated_adaptive_learning_rates_for_non-convex_optimization/links/552fb18c0cf2acd38cbc52d1/RMSProp-and-equilibrated-adaptive-learning-rates-for-non-convex-optimization.pdf]
 
 ---
 
@@ -727,7 +733,7 @@ Each update is made comparing gradient to past gradients. Less exploding/vanishi
 `$$ \begin{align} 
 v_t &= b_1 v_{t-1} + (1-b_1) \nabla L(w) &\text{<-- rolling average of gradient}\\
 s_t &= b_2 s_{t-1} + (1-b_2) [\nabla L(w)]^2 &\text{<-- rolling average of gradient squared}\\
-\Delta w &= -v_t / \sqrt{s_t + \epsilon} &\text{<-- Sort of like RMSProp + momentum?}\\
+\Delta w &= -v_t / \sqrt{s_t + \epsilon} &\text{<-- RMSProp + momentum}\\
 w &= w + \eta \Delta w
 \end{align}$$`
 
@@ -743,6 +749,14 @@ It works well?
 
 .col40[
 Most of the time SGD + a version of momentum
+
+Other adaptive methods:
+    - rprop
+    - Adagrad
+    - Adadelta
+    - AdaMax
+    - Nadam
+    - Probably others...
 
 Adam for GANs because it works well for them for some reason?
 
