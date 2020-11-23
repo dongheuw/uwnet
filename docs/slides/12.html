@@ -562,15 +562,201 @@ Typical loss function graph may look like this
 ]
 
 ---
-# 
+
+# SGD Is Bouncy 
 
 .col50[
-**Annealing**: slowly cooling metal so that it get stronger. Atoms shake themselves around, settling in to a stable crystal formation. Cool too quickly (quenching) and atoms won't be as tightly packed, more disorganized, harder but brittle.
-
-**Simulated Annealing**: slowly lower learning rate. At begining model has enough speed to get out of bad local optima. As learning rate lowers model can more closely track loss function into steep areas. Settles into very stable local optima (hopefully!)
+Consider minimizing function:
+`$$f(x,y) = x^2 + 50y^2$$`
+Where gradient is:
+`$$\nabla f(x,y) = [2x, 100y]$$`
+Most of the gradient is perpendicular to the direction of the global optimum
 ]
 .col50[
-<iframe src="https://www.desmos.com/calculator/2pr8wy3nym?embed" width="500px" height="500px" style="border: 1px solid #ccc" frameborder=0></iframe>
+<iframe src="https://www.desmos.com/calculator/fccgjy2yiw?embed" width="500px" height="500px" style="border: 1px solid #ccc" frameborder=0></iframe>
+]
+
+---
+
+# Momentum Averages Out Bounces
+
+.col50[
+Momentum term averages out the back-and-forth gradients and magnifies the gradient that is consistent in one direction:
+
+`$$\begin{align}\Delta w_t &= -\nabla L(w_t) + m*\Delta w_{t-1} \\
+w_{t+1} &= w_t + \eta \Delta w_{t}\end{align}$$`
+
+The purple line is with a momentum term of 0.8
+
+Still issues with momentum, sometimes it is too strong, model builds up speed in a direction and then overshoots!
+]
+.col50[
+<iframe src="https://www.desmos.com/calculator/ey0favzimj?embed" width="500px" height="500px" style="border: 1px solid #ccc" frameborder=0></iframe>
 ]
 
 
+---
+
+# Nesterov Gradient Descent
+
+We know we always move by the momentum amount no matter what. So why do we calculate the gradient at our current position?
+
+Instead we can move by the momentum term first, then calculate the gradient step to take from there. This means if our momentum term overshoots our gradient can pull the model back towards the right direction.
+
+`$$\begin{align}\Delta w_t &= -\nabla L(w_t + \eta m*\Delta w_{t-1}) + m*\Delta w_{t-1} \\
+w_{t+1} &= w_t + \eta \Delta w_{t}\end{align}$$`
+
+---
+
+# Newton's Method
+
+Finds roots of a function
+
+`$$x : f(x) = 0$$`
+
+Iterate:
+`$$x = x - f(x)/f'(x) $$`
+
+but we want to find local optima, not roots of our function so....
+ 
+Take derivatives!
+
+---
+# Newton's Method
+
+`$$\text{argmax}_x f(x) = x:f'(x) = 0$$`
+
+so our optimization is...
+
+Iterate:
+`$$x = x - f'(x)/f''(x)$$`
+
+---
+
+# What's Going On Here?
+
+Taylor series expansions:
+
+`$$f(x+a) = f(x) + f'(x)*a + \frac{1}{2}f''(x)*a^2+ \frac{1}{6}f'''(x)*a^3 + \dots + f^{(n)} \frac{1}{n!} a^n + \dots$$`
+
+Gradient descent uses first two terms:
+
+`$$f(x+a) = f(x) + f'(x)*a$$`
+
+This approximates our function as a line (or hyperplane) tangent to the current location `\(f(x)\)`.
+
+In gradient descent we try to pick the direction `\(a\)` to minimize this function. What do we pick?
+
+We just look at the **slope** of the estimate, in this case the slope is `\(f'(x)\)`
+
+Moving in opposite direction of slope decreases `\(f(x)\)` the fastest. But what if our approximation of the function were more complicated than just a hyperplane?
+
+
+---
+
+# What's Going On Here?
+
+Second-order Taylor series expansion:
+
+`$$f(x+a) = f(x) + f'(x)*a + \frac{1}{2}f''(x)*a^2$$`
+
+Instead of linear this is a quadratic approximation. Now we can use an old trick! To minimize a function take derivative and set to zero:
+
+`$$\frac{d}{da} [f(x) + f'(x)*a + \frac{1}{2} f''(x)*a^2 = 0 $$`
+`$$f'(x) + f''(x)*a = 0 $$`
+`$$f''(x)*a = -f'(x)   $$`
+`$$a = -f'(x) /f''(x)  $$`
+
+This is Newton's method! At any point in time, estimate function as a quadratic and then move a little bit to the point that minimizes the quadratic estimation. 
+
+---
+# Newton's Method
+
+`$$\text{argmax}_x f(x) = x:f'(x) = 0$$`
+
+so our optimization is...
+
+Iterate:
+`$$x = x - f'(x)/f''(x)$$`
+
+---
+# Multivariate Newton's Method
+
+`$$\text{argmax}_x f(x) = x:\nabla f(x) = 0$$`
+
+so our optimization is...
+
+Iterate:
+`$$x = x - [Hf(x)]^{-1}*\nabla f(x)$$`
+
+---
+
+# H: Hessian, the problem
+
+`$$ H = \begin{bmatrix}
+\frac{\delta^2}{\delta x_1 \delta x_1} & \frac{\delta^2}{\delta x_1 \delta x_2} & \dots & \frac{\delta^2}{\delta x_1 \delta x_n} \\
+\frac{\delta^2}{\delta x_2 \delta x_1} & \frac{\delta^2}{\delta x_2 \delta x_2} & \dots & \frac{\delta^2}{\delta x_2 \delta x_n} \\
+\dots & \dots & \dots & \dots \\
+\frac{\delta^2}{\delta x_n \delta x_1} & \frac{\delta^2}{\delta x_n \delta x_2} & \dots & \frac{\delta^2}{\delta x_n \delta x_n} \\
+\end{bmatrix}$$`
+
+Quadratic in number of entries in vector `\(x\)`. Neural networks have millions of weights or more, Hessian would be trillions of entries!
+
+BUT Newton's method is still cool and powerful, so can we approximate it in some way? So called "second-order" methods...
+ 
+---
+
+# RMSProp
+
+`$$ \begin{align} 
+s_t &= ps_{t-1} + (1-p) [\nabla L(w)]^2 &\text{<-- rolling average of gradient squared}\\
+\Delta w &= -\nabla L(w) / \sqrt{s_t + \epsilon} &\text{<-- divide by exponential moving average of gradient}\\
+w &= w + \eta \Delta w
+\end{align}$$`
+
+Why?
+
+Each update is made comparing gradient to past gradients. Less exploding/vanishing gradient problem
+
+`\(s_t\)`: estimate of variance of gradient (uncentered)
+
+---
+
+# Adam
+
+`$$ \begin{align} 
+v_t &= b_1 v_{t-1} + (1-b_1) \nabla L(w) &\text{<-- rolling average of gradient}\\
+s_t &= b_2 s_{t-1} + (1-b_2) [\nabla L(w)]^2 &\text{<-- rolling average of gradient squared}\\
+\Delta w &= -v_t / \sqrt{s_t + \epsilon} &\text{<-- Sort of like RMSProp + momentum?}\\
+w &= w + \eta \Delta w
+\end{align}$$`
+
+Why?
+
+Something something variance momentum approximately second-order something?
+
+It works well?
+
+---
+
+# So which one do I use?
+
+.col40[
+Most of the time SGD + a version of momentum
+
+Adam for GANs because it works well for them for some reason?
+
+Wait, what are GANs? Next class!
+]
+
+.col60[
+
+{% include image
+    src="../figs/optimizercompare.png"
+    alt="Chart comparing validation loss over time using different optimizers. RMS prop converges to a high loss, than SGD is slightly lower, SGD + momentum and Adam all converge to lower losses significantly faster. Best is SGD + nesterov + momentum."
+    attribution=""
+    caption="Validation loss between different optimizers, cats vs. dogs task"
+%}
+]
+
+.footnote[https://shaoanlu.wordpress.com/2017/05/29/sgd-all-which-one-is-the-best-optimizer-dogs-vs-cats-toy-experiment/]
