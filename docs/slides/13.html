@@ -508,6 +508,121 @@ Problems:
         - Often caused by above problem, need to fix that
         - Good initialization is important
         - Coarse to fine training
-        ]
-        ]
+]
+]
+
+
+---
+# Progressive Growing of GANs
+
+.center[
+![four images showing the progressive learning of gans training progress. First is output at 4x4 resolution, just looks like 16 skin-tone pixels. Next is 16x16 resolution, looks like a very grainy face. Both of these are at training time 0 days. Next is after 2 days training at 64x64 resolution, looks like a slightly blurry face. Last is 14 days training at final 1024x1024 resolution, looks like a very realistic face](../figs/proganall.png)
+]
+
+.footnote[https://arxiv.org/pdf/1710.10196.pdf]
+---
+# Progressive Growing of GANs
+
+.center[
+![A gif showing each stage of progressive gan training from 4x4 to 1024x1024 output image size.](../figs/progan.gif)
+]
+
+.footnote[https://arxiv.org/pdf/1710.10196.pdf]
+
+---
+
+# Style GAN
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/kSLJriaOumA" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+
+.footnote[https://arxiv.org/pdf/1812.04948.pdf]
+
+
+---
+
+# CycleGAN
+
+Sometimes you want to convert one image to another (e.g. take daytime image and produce nighttime image, or take natural image and turn into cartoon). However, getting perfect paired training data for pix2pix model would be impossible.
+
+CycleGAN time! Like conditional GAN but no "ground truth" condition. Instead, we want to train a forward transformation and the inverse and we want the round trip to be close to the original input.
+
+- Gather a bunch of images of each class, say horses and zebras
+- Two transformation functions, `\(Z: \text{horse} \to \text{zebra}\)`, `\(H: \text{zebra} \to \text{horse}\)`
+- Still have discriminator loss, for each class. Minimize:
+    - `\(D_\text{horse}[x_\text{horse}, H(x_\text{zebra})]\)`
+    - `\(D_\text{zebra}[x_\text{zebra}, Z(x_\text{horse})]\)`
+- Also want to minimize round trip loss:
+    - `\(dist[x_\text{horse}, H(Z(x_\text{horse}))]\)`
+    - `\(dist[x_\text{zebra}, Z(H(x_\text{zebra}))]\)`
+
+
+.footnote[https://arxiv.org/pdf/1703.10593.pdf]
+
+
+---
+
+# CycleGAN
+
+.height250[
+{% include chart
+chart='
+flowchart TB
+    subgraph Horse
+        h["\(x_\text{horse}\)"]
+        hz["\(H(x_\text{zebra})\)"]
+        hzh["\(H(Z(x_\text{horse}))\)"]
+    end
+    subgraph Zebra
+        z["\(x_\text{zebra}\)"]
+        zh["\(Z(x_\text{horse})\)"]
+        zhz["\(Z(H(x_\text{zebra}))\)"]
+    end
+    h --Z--> zh
+    z --H--> hz
+    zh --H--> hzh
+    hz --Z--> zhz
+    h <--"\(D_\text{horse}\)" -->hz
+    z <--"\(D_\text{zebra}\)" -->zh
+    h <--"round-trip similarity"-->hzh
+    zhz <--"round-trip similarity"-->z
+'
+caption="DCGAN"
+%}
+]
+
+Train:
+- `\(Z\)`: generator for zebras
+- `\(H\)`: generator for horses
+- `\(D_z\)`: discriminator for zebras
+- `\(D_h\)`: discriminator for horses
+
+.footnote[https://arxiv.org/pdf/1703.10593.pdf]
+
+
+---
+# CycleGAN
+
+![example horse to zebra transformation](../figs/horse2zebra.png)
+![example bear to panda transformation](../figs/bear2panda.png)
+
+---
+# CycleGAN
+
+![Collection of results from CycleGAN including Monet paintings back and forth to natural images, zebras to horses, summer to winter, and photographs to various panters (Monet, VanGogh, Cezanne, Ukiyo-e)](../figs/cyclegan.jpg)
+
+---
+# CycleGAN
+
+![CycleGAN results on image segmentation for cityscapes dataset, results look fairly good, some noise](../figs/cycleseg.png)
+
+.footnote[https://arxiv.org/pdf/1908.11569.pdf]
+
+---
+# GAN Takeaways
+
+- Learn the model AND the loss function!
+- Can take advantage of unlabelled, very weakly labelled data
+- Solve many problems (e.g. semantic segmentation) without even paired examples
+- VERY finicky to train and keep stable
+- Constant fight between generator and discriminator, discriminator usually wins
 
